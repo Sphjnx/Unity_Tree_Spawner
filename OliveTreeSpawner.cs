@@ -1,46 +1,42 @@
 using UnityEngine;
 
-public class    OliveTreeSpawner: MonoBehaviour
-{   
-    public GameObject TreePrefab; // tree you want to place
-    public int treeCount = 100; // Number of trees 
-    public Vector3 areaSize = new Vector3(50, 0, 50); // area
-    public float minDistance = 3f; // distance between t
+public class OliveTreeSpawner : MonoBehaviour
+{
+    public GameObject oliveTreePrefab; // prefab you want to use
+    public int treeCount = 100; // number of trees
+    public Vector3 areaSize = new Vector3(50, 0, 50); // area 
+    public float minDistance = 3f; // min dist between trees
 
     void Start()
     {
-        //place trees
-        for(int i = 0;i< treeCount; i++)
+        int placedTrees = 0;
+
+        while (placedTrees < treeCount)
         {
-            //random position
             Vector3 randomPosition = new Vector3(
-                Random.Range(-areaSize.x / 2, areaSize.x / 2), // X
-                0, // Y
-                Random.Range(-areaSize.z / 2, areaSize.z / 2) // Z
+                Random.Range(-areaSize.x / 2, areaSize.x / 2),
+                0,
+                Random.Range(-areaSize.z / 2, areaSize.z / 2)
             );
 
-            // check the distance
-            if (IsValidPosition(randomPosition))
-            {
-                //place tree on accurate position
-                Instantiate(TreePrefab, randomPosition, Quaternion.identity);
+            Vector3 worldPosition = transform.position + randomPosition;
 
-            }
-            else
+            if (IsValidPosition(worldPosition))
             {
-                i--; // if accurate position couldn't found try again
+                GameObject tree = Instantiate(oliveTreePrefab, worldPosition, Quaternion.identity);
+                tree.transform.parent = transform; 
+                placedTrees++;
             }
         }
     }
 
-    //distance between trees
     bool IsValidPosition(Vector3 position)
     {
         foreach (Transform child in transform)
         {
             if (Vector3.Distance(child.position, position) < minDistance)
             {
-                return false
+                return false;
             }
         }
         return true;
