@@ -2,42 +2,53 @@ using UnityEngine;
 
 public class OliveTreeSpawner : MonoBehaviour
 {
-    [Header("prefab and area settings")]
-
-    public GameObject oliveTreePrefab
+    [Header("Prefab and Area Settings")]
+    public GameObject oliveTreePrefab;
     public int treeCount = 100;
     public Vector3 areaSize = new Vector3(50, 0, 50);
     public float minDistance = 3f;
 
-    [Header("random position and scale")]
-
+    [Header("Random Position and Scale")]
     public Vector2 scaleRange = new Vector2(0.9f, 1.2f);
     public bool randomRotation = true;
 
-    [Header("surface height (Terrain support)")]
-
-    public LayerMask groundLayer = ~0; // search for all layers
+    [Header("Surface Height (Terrain Support)")]
+    public LayerMask groundLayer = ~0; // all layers
 
     private bool hasSpawned = false;
 
     void Start()
     {
-        if (hasSpawned || oliveTreePrefab == null)
-            return;
-
-        int placed = 0;
-
-        while (placed < treeCount)
+        if (Application.isPlaying) // only spawn when game starts
         {
+            if (hasSpawned || oliveTreePrefab == null)
+                return;
+
+            SpawnTrees();
+
+            hasSpawned = true;
+            enabled = false;
+        }
+    }
+
+    public void SpawnTrees()
+    {
+        int placed = 0;
+        int attempts = 0;
+        int maxAttempts = treeCount * 10; // prevents infinite loop
+
+        while (placed < treeCount && attempts < maxAttempts)
+        {
+            attempts++;
+
             Vector3 randomOffset = new Vector3(
                 Random.Range(-areaSize.x / 2f, areaSize.x / 2f),
-                50f, // comes through above
+                50f,  // ray assigns from above
                 Random.Range(-areaSize.z / 2f, areaSize.z / 2f)
             );
 
             Vector3 worldPosition = transform.position + randomOffset;
 
-            // find ground with raycast
             if (Physics.Raycast(worldPosition, Vector3.down, out RaycastHit hit, 100f, groundLayer))
             {
                 Vector3 finalPosition = hit.point;
@@ -46,11 +57,9 @@ public class OliveTreeSpawner : MonoBehaviour
                 {
                     GameObject tree = Instantiate(oliveTreePrefab, finalPosition, Quaternion.identity, transform);
 
-                    // random rotation
                     if (randomRotation)
                         tree.transform.Rotate(0, Random.Range(0f, 360f), 0);
 
-                    // random scale
                     float scale = Random.Range(scaleRange.x, scaleRange.y);
                     tree.transform.localScale = Vector3.one * scale;
 
@@ -58,10 +67,6 @@ public class OliveTreeSpawner : MonoBehaviour
                 }
             }
         }
-
-        //execute only once
-        hasSpawned = true;
-        this.enabled = false;
     }
 
     bool IsValidPosition(Vector3 pos)
